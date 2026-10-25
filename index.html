@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Secret Lair · Chapter 1</title>
-<meta name="description" content="Secret Lair, Volume 1: Field of Thorns. Chapter 1: Roots.">
+<title>Secret Lair</title>
+<meta name="description" content="Secret Lair, Volume 1: Field of Thorns.">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0e0e10">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Secret Lair · Chapter 1: Roots">
+<meta property="og:title" content="Secret Lair">
 <meta property="og:description" content="Volume 1: Field of Thorns">
 <meta property="og:image" content="https://moiz-q.github.io/secret-lair/cover.jpg">
 <meta property="og:url" content="https://moiz-q.github.io/secret-lair/">
@@ -38,9 +38,18 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .btn { padding: 11px 20px; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 600; }
 .btn.ghost { background: var(--chip); color: var(--text); }
 .btn:focus-visible, .icon:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.chapters { list-style: none; margin: 28px 0 0; padding: 0; display: grid; gap: 8px; }
+.chapters button { display: flex; gap: 12px; align-items: center; width: 100%; padding: 8px; border-radius: 10px;
+  background: var(--chip); text-align: left; }
+.chapters button:hover { background: #26262b; }
+.chapters button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.chapters img { width: 44px; height: 66px; aspect-ratio: auto; object-fit: cover; border-radius: 3px; box-shadow: none; flex: none; }
+.chapters b { display: block; font-weight: 600; }
+.chapters small { color: var(--muted); font-size: 13px; }
 @media (max-width: 700px) {
   .land { grid-template-columns: 1fr; gap: 24px; text-align: center; }
   .land img { max-width: 260px; margin: 0 auto; }
+  .chapters img { margin: 0; }
   .cta { justify-content: center; }
 }
 
@@ -84,6 +93,11 @@ input[type=range] { flex: 1; accent-color: var(--accent); min-width: 80px; }
 #grid { position: fixed; inset: 0; background: rgba(8,8,10,.97); z-index: 5; overflow-y: auto; padding: 16px; }
 #grid header { display: flex; align-items: center; justify-content: space-between; max-width: 1100px; margin: 0 auto 14px; }
 #grid h2 { margin: 0; font-size: 16px; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; max-width: 1100px; margin: 0 auto 16px; }
+.tabs button { padding: 6px 12px; border-radius: 999px; background: var(--chip); color: var(--muted); font-size: 13px; }
+.tabs button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.bar .title { cursor: pointer; }
+.endcard .btn { margin: 4px; }
 .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 14px; max-width: 1100px; margin: 0 auto; }
 .thumbs button { text-align: center; color: var(--muted); font-size: 12px; }
 .thumbs img { width: 100%; aspect-ratio: 2/3; object-fit: cover; border-radius: 3px; border: 2px solid transparent; display: block; margin-bottom: 4px; }
@@ -111,11 +125,12 @@ input[type=range] { flex: 1; accent-color: var(--accent); min-width: 80px; }
     <div>
       <h1>Secret<br>Lair</h1>
       <p class="vol">Volume 1: Field of Thorns</p>
-      <p class="ch">Chapter 1: Roots</p>
+      <p class="ch" id="chName"></p>
       <div class="cta">
         <button class="btn" id="startBtn">Start reading</button>
         <button class="btn ghost hidden" id="resumeBtn"></button>
       </div>
+      <ul class="chapters hidden" id="chapList" aria-label="Chapters"></ul>
     </div>
   </div>
 </section>
@@ -125,7 +140,7 @@ input[type=range] { flex: 1; accent-color: var(--accent); min-width: 80px; }
     <button class="icon" id="homeBtn" aria-label="Back to cover" title="Cover">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
-    <div class="title">Secret Lair<span>Chapter 1: Roots</span></div>
+    <div class="title" id="barTitle" title="Chapters and pages">Secret Lair<span id="barChapter"></span></div>
     <div class="modes" role="group" aria-label="Reading mode">
       <button data-mode="single" aria-pressed="false" title="One page at a time">Page</button>
       <button data-mode="double" aria-pressed="false" title="Two-page spreads">Spread</button>
@@ -160,28 +175,42 @@ input[type=range] { flex: 1; accent-color: var(--accent); min-width: 80px; }
 </section>
 
 <section id="grid" class="hidden" aria-label="All pages">
-  <header><h2>All pages</h2>
+  <header><h2 id="gridTitle">All pages</h2>
     <button class="icon" id="gridClose" aria-label="Close">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
     </button></header>
+  <div class="tabs hidden" id="tabs" role="group" aria-label="Chapter"></div>
   <div class="thumbs" id="thumbs"></div>
 </section>
 
 <script>
-const BOOK = {"title": "Secret Lair", "volume": "Volume 1: Field of Thorns", "chapter": "Chapter 1: Roots", "pages": [{"n": 1, "src": "pages/01.webp", "thumb": "pages/01_t.webp", "alt": "Twenty-three years ago, the sky went white for nine seconds. No one could explain it. By morning, most people had stopped trying.", "title_page": false}, {"n": 2, "src": "pages/02.webp", "thumb": "pages/02_t.webp", "alt": "Nine months later, the first children were born different.", "title_page": false}, {"n": 3, "src": "pages/03.webp", "thumb": "pages/03_t.webp", "alt": "They called it the Shift. The children were Shifted. Everyone else got a word they'd never needed before. Constant.", "title_page": false}, {"n": 4, "src": "pages/04.webp", "thumb": "pages/04_t.webp", "alt": "At first, the world called it a miracle. Then it called it a problem. Then it called it an opportunity. 1147", "title_page": false}, {"n": 5, "src": "pages/05.webp", "thumb": "pages/05_t.webp", "alt": "Some of the Shifted decided they didn't need anyone's permission. They came at dusk. People started calling them Vesper.", "title_page": false}, {"n": 6, "src": "pages/06.webp", "thumb": "pages/06_t.webp", "alt": "Fifteen years ago, Vesper came to Asheford. Stay with me. Hey. Stay with me. The city survived. Not everyone came out whole.", "title_page": false}, {"n": 7, "src": "pages/07.webp", "thumb": "pages/07_t.webp", "alt": "", "title_page": false}, {"n": 8, "src": "pages/08.webp", "thumb": "pages/08_t.webp", "alt": "Harbour Night: the burning harbour, full page with no words. Turn your device sideways.", "title_page": false}, {"n": 9, "src": "pages/09.webp", "thumb": "pages/09_t.webp", "alt": "FIFTEEN YEARS LATER SECRET LAIR Field of Thorns · Chapter 1: Roots", "title_page": true}, {"n": 10, "src": "pages/10.webp", "thumb": "pages/10_t.webp", "alt": "", "title_page": false}, {"n": 11, "src": "pages/11.webp", "thumb": "pages/11_t.webp", "alt": "You'll open it for us.", "title_page": false}, {"n": 12, "src": "pages/12.webp", "thumb": "pages/12_t.webp", "alt": "", "title_page": false}, {"n": 13, "src": "pages/13.webp", "thumb": "pages/13_t.webp", "alt": "Intake Thirty-One. Forty of us. They say it's the best year the Corps has had in a decade.", "title_page": false}, {"n": 14, "src": "pages/14.webp", "thumb": "pages/14_t.webp", "alt": "Every month, they post the rankings. Mum: Happy birthday, love. 22!! x 34 · 35 · 36 ROKA · 37 I'm thirty-sixth.", "title_page": false}, {"n": 15, "src": "pages/15.webp", "thumb": "pages/15_t.webp", "alt": "You look like you slept in a hedge. Thanks. You've got a follower. He's been with me since the bakery. I keep telling him I can't afford him. Assessment today. I know. Mattyes is grading. I know.", "title_page": false}, {"n": 16, "src": "pages/16.webp", "thumb": "pages/16_t.webp", "alt": "Did you sleep here? No. Is it still pulling? Drifted right under load. Fixed it. Mostly.", "title_page": false}, {"n": 17, "src": "pages/17.webp", "thumb": "pages/17_t.webp", "alt": "Twelve civilians. Six hostiles. Drones are hostiles. Dummies are civilians. Try not to mix them up. Vest goes red, you're out. First group. Go.", "title_page": false}, {"n": 18, "src": "pages/18.webp", "thumb": "pages/18_t.webp", "alt": "Jeon. Ranked first. Eleven seconds. Didn't even touch the dummies.", "title_page": false}, {"n": 19, "src": "pages/19.webp", "thumb": "pages/19_t.webp", "alt": "Cas. Pass. Shibby. Pass. Anna. Pass. Azelax. Pass. Rassy. Pass. Pearl. Pass.", "title_page": false}, {"n": 20, "src": "pages/20.webp", "thumb": "pages/20_t.webp", "alt": "Good reflexes. Good night vision. Next. Next group.", "title_page": false}, {"n": 21, "src": "pages/21.webp", "thumb": "pages/21_t.webp", "alt": "Roka. Out.", "title_page": false}, {"n": 22, "src": "pages/22.webp", "thumb": "pages/22_t.webp", "alt": "…Moiz. Pass. Support track? Plants. Good for search and rescue. …Maybe.", "title_page": false}, {"n": 23, "src": "pages/23.webp", "thumb": "pages/23_t.webp", "alt": "You know what my file says? \"Good reflexes. Good night vision.\" That's it. That's the whole entry. And the cats. And every cat in the city thinks I'm their mum. They left that bit out. Everyone else's power is an answer.", "title_page": false}, {"n": 24, "src": "pages/24.webp", "thumb": "pages/24_t.webp", "alt": "Mine's a garden. I didn't get one at all. Built the first one of these out of scrap when I was fourteen. Weighed a ton. Caught fire twice.", "title_page": false}, {"n": 25, "src": "pages/25.webp", "thumb": "pages/25_t.webp", "alt": "Your power isn't the problem. Nobody's shown you what it's for yet. Hey. You weren't eating it.", "title_page": false}, {"n": 26, "src": "pages/26.webp", "thumb": "pages/26_t.webp", "alt": "Next week's field exercise. Search and rescue. Old harbour district. Inside the fence? Inside the fence. First Intake that's ever been let in.", "title_page": false}, {"n": 27, "src": "pages/27.webp", "thumb": "pages/27_t.webp", "alt": "Teams go up tonight. Dismissed.", "title_page": false}, {"n": 28, "src": "pages/28.webp", "thumb": "pages/28_t.webp", "alt": "Leena: you thought we forgot didn't you Leena: check your bag Moiz: Happy 22nd, Roka. Same roof next year.", "title_page": false}, {"n": 29, "src": "pages/29.webp", "thumb": "pages/29_t.webp", "alt": "The flowers… They're all facing the same way. …Towards the harbour.", "title_page": false}, {"n": 30, "src": "pages/30.webp", "thumb": "pages/30_t.webp", "alt": "Fifteen years.", "title_page": false}], "spreads": [], "cover": "pages/09.webp"};
+const BOOK = {"title": "Secret Lair", "volume": "Volume 1: Field of Thorns", "chapters": [{"n": 1, "name": "Chapter 1: Roots", "pages": [{"n": 1, "src": "pages/c1/01.webp", "thumb": "pages/c1/01_t.webp", "alt": "Twenty-three years ago, the sky went white for nine seconds. No one could explain it. By morning, most people had stopped trying.", "title_page": false}, {"n": 2, "src": "pages/c1/02.webp", "thumb": "pages/c1/02_t.webp", "alt": "Nine months later, the first children were born different.", "title_page": false}, {"n": 3, "src": "pages/c1/03.webp", "thumb": "pages/c1/03_t.webp", "alt": "They called it the Shift. The children were Shifted. Everyone else got a word they'd never needed before. Constant.", "title_page": false}, {"n": 4, "src": "pages/c1/04.webp", "thumb": "pages/c1/04_t.webp", "alt": "At first, the world called it a miracle. Then it called it a problem. Then it called it an opportunity. 1147", "title_page": false}, {"n": 5, "src": "pages/c1/05.webp", "thumb": "pages/c1/05_t.webp", "alt": "Some of the Shifted decided they didn't need anyone's permission. They came at dusk. People started calling them Vesper.", "title_page": false}, {"n": 6, "src": "pages/c1/06.webp", "thumb": "pages/c1/06_t.webp", "alt": "Fifteen years ago, Vesper came to Asheford. Stay with me. Hey. Stay with me. The city survived. Not everyone came out whole.", "title_page": false}, {"n": 7, "src": "pages/c1/07.webp", "thumb": "pages/c1/07_t.webp", "alt": "", "title_page": false}, {"n": 8, "src": "pages/c1/08.webp", "thumb": "pages/c1/08_t.webp", "alt": "Harbour Night: the burning harbour, full page with no words. Turn your device sideways.", "title_page": false}, {"n": 9, "src": "pages/c1/09.webp", "thumb": "pages/c1/09_t.webp", "alt": "FIFTEEN YEARS LATER SECRET LAIR Field of Thorns · Chapter 1: Roots", "title_page": true}, {"n": 10, "src": "pages/c1/10.webp", "thumb": "pages/c1/10_t.webp", "alt": "", "title_page": false}, {"n": 11, "src": "pages/c1/11.webp", "thumb": "pages/c1/11_t.webp", "alt": "You'll open it for us.", "title_page": false}, {"n": 12, "src": "pages/c1/12.webp", "thumb": "pages/c1/12_t.webp", "alt": "", "title_page": false}, {"n": 13, "src": "pages/c1/13.webp", "thumb": "pages/c1/13_t.webp", "alt": "Intake Thirty-One. Forty of us. They say it's the best year the Corps has had in a decade.", "title_page": false}, {"n": 14, "src": "pages/c1/14.webp", "thumb": "pages/c1/14_t.webp", "alt": "Every month, they post the rankings. Mum: Happy birthday, love. 22!! x 34 · 35 · 36 ROKA · 37 I'm thirty-sixth.", "title_page": false}, {"n": 15, "src": "pages/c1/15.webp", "thumb": "pages/c1/15_t.webp", "alt": "You look like you slept in a hedge. Thanks. You've got a follower. He's been with me since the bakery. I keep telling him I can't afford him. Assessment today. I know. Mattyes is grading. I know.", "title_page": false}, {"n": 16, "src": "pages/c1/16.webp", "thumb": "pages/c1/16_t.webp", "alt": "Did you sleep here? No. Is it still pulling? Drifted right under load. Fixed it. Mostly.", "title_page": false}, {"n": 17, "src": "pages/c1/17.webp", "thumb": "pages/c1/17_t.webp", "alt": "Twelve civilians. Six hostiles. Drones are hostiles. Dummies are civilians. Try not to mix them up. Vest goes red, you're out. First group. Go.", "title_page": false}, {"n": 18, "src": "pages/c1/18.webp", "thumb": "pages/c1/18_t.webp", "alt": "Jeon. Ranked first. Eleven seconds. Didn't even touch the dummies.", "title_page": false}, {"n": 19, "src": "pages/c1/19.webp", "thumb": "pages/c1/19_t.webp", "alt": "Cas. Pass. Shibby. Pass. Anna. Pass. Azelax. Pass. Rassy. Pass. Pearl. Pass.", "title_page": false}, {"n": 20, "src": "pages/c1/20.webp", "thumb": "pages/c1/20_t.webp", "alt": "Good reflexes. Good night vision. Next. Next group.", "title_page": false}, {"n": 21, "src": "pages/c1/21.webp", "thumb": "pages/c1/21_t.webp", "alt": "Roka. Out.", "title_page": false}, {"n": 22, "src": "pages/c1/22.webp", "thumb": "pages/c1/22_t.webp", "alt": "…Moiz. Pass. Support track? Plants. Good for search and rescue. …Maybe.", "title_page": false}, {"n": 23, "src": "pages/c1/23.webp", "thumb": "pages/c1/23_t.webp", "alt": "You know what my file says? \"Good reflexes. Good night vision.\" That's it. That's the whole entry. And the cats. And every cat in the city thinks I'm their mum. They left that bit out. Everyone else's power is an answer.", "title_page": false}, {"n": 24, "src": "pages/c1/24.webp", "thumb": "pages/c1/24_t.webp", "alt": "Mine's a garden. I didn't get one at all. Built the first one of these out of scrap when I was fourteen. Weighed a ton. Caught fire twice.", "title_page": false}, {"n": 25, "src": "pages/c1/25.webp", "thumb": "pages/c1/25_t.webp", "alt": "Your power isn't the problem. Nobody's shown you what it's for yet. Hey. You weren't eating it.", "title_page": false}, {"n": 26, "src": "pages/c1/26.webp", "thumb": "pages/c1/26_t.webp", "alt": "Next week's field exercise. Search and rescue. Old harbour district. Inside the fence? Inside the fence. First Intake that's ever been let in.", "title_page": false}, {"n": 27, "src": "pages/c1/27.webp", "thumb": "pages/c1/27_t.webp", "alt": "Teams go up tonight. Dismissed.", "title_page": false}, {"n": 28, "src": "pages/c1/28.webp", "thumb": "pages/c1/28_t.webp", "alt": "Leena: you thought we forgot didn't you Leena: check your bag Moiz: Happy 22nd, Roka. Same roof next year.", "title_page": false}, {"n": 29, "src": "pages/c1/29.webp", "thumb": "pages/c1/29_t.webp", "alt": "The flowers… They're all facing the same way. …Towards the harbour.", "title_page": false}, {"n": 30, "src": "pages/c1/30.webp", "thumb": "pages/c1/30_t.webp", "alt": "Fifteen years.", "title_page": false}], "spreads": [], "cover": "pages/c1/09.webp", "thumb": "pages/c1/09_t.webp"}, {"n": 2, "name": "Chapter 2: The Week", "pages": [{"n": 1, "src": "pages/c2/01.webp", "thumb": "pages/c2/01_t.webp", "alt": "It's a seedling. In a little pot. Moiz made a tag for it. Of course he did. Mum. They're sending us into the old harbour. Next week. A rescue drill. …Mum? …Be careful in there. Stay with the others. Promise me.", "title_page": true}, {"n": 2, "src": "pages/c2/02.webp", "thumb": "pages/c2/02_t.webp", "alt": "TEAM FOUR · Roka · Leena · Moiz · Pearl · Tuna", "title_page": false}, {"n": 3, "src": "pages/c2/03.webp", "thumb": "pages/c2/03_t.webp", "alt": "Leena: who's tuna Roka: no idea Tuna: the guy who sits behind you in briefings, roka Tuna: see you all tomorrow!! Moiz: Pearl. Leena: be nice", "title_page": false}, {"n": 4, "src": "pages/c2/04.webp", "thumb": "pages/c2/04_t.webp", "alt": "Team Four! Roka. Leena. Moiz. Pearl's late. I'm not late. You're about to be. Your heart's going like you ran here. …Okay. I like him.", "title_page": false}, {"n": 5, "src": "pages/c2/05.webp", "thumb": "pages/c2/05_t.webp", "alt": "You can hear heartbeats? Everyone's. All the time. These help. Mostly. Search and rescue, though. Finally a drill where I'm actually useful. Team Four. Course. Now.", "title_page": false}, {"n": 6, "src": "pages/c2/06.webp", "thumb": "pages/c2/06_t.webp", "alt": "Team Four. Three civilians. Go. Thirty seconds and their sensors are blind— Done. Civilian crushed. Tuna, you're out. …Ow?", "title_page": false}, {"n": 7, "src": "pages/c2/07.webp", "thumb": "pages/c2/07_t.webp", "alt": "All five out. Zero civilians saved. Again. You could've said you were using it. You could've waited thirty seconds. Children. Four hours later. Again. My heart's fine, by the way. Nobody asked.", "title_page": false}, {"n": 8, "src": "pages/c2/08.webp", "thumb": "pages/c2/08_t.webp", "alt": "Mattyes says we build the team radios. Together. Sit. Three hours in. You drew all of these? Since I was eight. I built the arm myself.", "title_page": false}, {"n": 9, "src": "pages/c2/09.webp", "thumb": "pages/c2/09_t.webp", "alt": "The wrist joint. You rebuilt it. Four times. It still slips. Your connector's the wrong size. I know. Nobody makes one that small. Later. Pearl's gone home. She made one. The right size. …It fits.", "title_page": false}, {"n": 10, "src": "pages/c2/10.webp", "thumb": "pages/c2/10_t.webp", "alt": "Wednesday. I cut it back on Monday. It's grown through the tape overnight. Am I doing this in my sleep? …Fine. Stay.", "title_page": false}, {"n": 11, "src": "pages/c2/11.webp", "thumb": "pages/c2/11_t.webp", "alt": "Thursday. Cards are a classic. Cards are a magic trick. Sorry— sorry—! …Show-off. You're welcome.", "title_page": false}, {"n": 12, "src": "pages/c2/12.webp", "thumb": "pages/c2/12_t.webp", "alt": "We are not doing this. She likes you. Anna's wing's sprained. She won't tell anyone. Cas owes Shibby lunch. How do you know all that? I listen.", "title_page": false}, {"n": 13, "src": "pages/c2/13.webp", "thumb": "pages/c2/13_t.webp", "alt": "Friday. Faster than Monday. Still a mess. Jeon. Ranked first. Practising alone, at night?", "title_page": false}, {"n": 14, "src": "pages/c2/14.webp", "thumb": "pages/c2/14_t.webp", "alt": "You can come out. I thought it was easy for you. It looks easy. That's the point. Your vines. On the assessment. They grew around the dummies. Not through them. …I didn't notice. That's control. Took me two years to learn it.", "title_page": false}, {"n": 15, "src": "pages/c2/15.webp", "thumb": "pages/c2/15_t.webp", "alt": "Saturday. In the park, every flower still faces the harbour. They won't go in. Any of them. Something in there's scaring them.", "title_page": false}, {"n": 16, "src": "pages/c2/16.webp", "thumb": "pages/c2/16_t.webp", "alt": "Couldn't sleep. Me neither.", "title_page": false}, {"n": 17, "src": "pages/c2/17.webp", "thumb": "pages/c2/17_t.webp", "alt": "I was eight when the harbour burned. I don't remember much. Fire. Noise. Shoes. Someone walked right past me. Didn't even slow down.", "title_page": false}, {"n": 18, "src": "pages/c2/18.webp", "thumb": "pages/c2/18_t.webp", "alt": "…Thanks. I didn't do anything. You stayed.", "title_page": false}, {"n": 19, "src": "pages/c2/19.webp", "thumb": "pages/c2/19_t.webp", "alt": "Sunday. Channel four. Don't touch the dial. Everyone's heart's going way too fast. Mine too. Tomorrow's the harbour. Wow. Thanks, Tuna. Very calming.", "title_page": false}, {"n": 20, "src": "pages/c2/20.webp", "thumb": "pages/c2/20_t.webp", "alt": "Stay with your team. Radios on. Lose your team, you come straight back to this gate. This is the Senior Warden, going in ahead of you. Any order from the Warden, you follow it. That scarf. I've seen it before. Where?", "title_page": false}, {"n": 21, "src": "pages/c2/21.webp", "thumb": "pages/c2/21_t.webp", "alt": "Team Four. Right on time.", "title_page": false}], "spreads": [], "cover": "pages/c2/01.webp", "thumb": "pages/c2/01_t.webp"}, {"n": 3, "name": "Chapter 3: Vesper", "pages": [{"n": 1, "src": "pages/c3/01.webp", "thumb": "pages/c3/01_t.webp", "alt": "The same morning. Gina. They're through the gate. All forty, inside the fence. Team Four? Right on schedule. Then come home. On my way.", "title_page": true}, {"n": 2, "src": "pages/c3/02.webp", "thumb": "pages/c3/02_t.webp", "alt": "LINE 4 - STATION CLOSED", "title_page": false}, {"n": 3, "src": "pages/c3/03.webp", "thumb": "pages/c3/03_t.webp", "alt": "Under the closed Line 4 station. This is where Vesper lives.", "title_page": false}, {"n": 4, "src": "pages/c3/04.webp", "thumb": "pages/c3/04_t.webp", "alt": "Zeyno. She's been lighting birthday candles since she was seven. Zeyno. Will the Corps find us down here? Not today. Make a wish.", "title_page": false}, {"n": 5, "src": "pages/c3/05.webp", "thumb": "pages/c3/05_t.webp", "alt": "Gina's back! Did you eat today? The cat did. Eat something. You, not the cat.", "title_page": false}, {"n": 6, "src": "pages/c3/06.webp", "thumb": "pages/c3/06_t.webp", "alt": "The far end of the platform. Where Vesper plans. Sicario. Gina's back. Good. Then we go now, while the gates are open. No. We wait for dusk. Forty trainees and a handful of Wardens. We could walk through them. We're not going for the trainees.", "title_page": false}, {"n": 7, "src": "pages/c3/07.webp", "thumb": "pages/c3/07_t.webp", "alt": "The Corps sent forty trainees inside the fence today. A search-and-rescue drill. The gates stay open until dusk. That's when we go in. Zaytoona. My bats are already over the fence. By tonight I'll know where every team is. Tacos. And the Wardens? Six of them. One I don't like. Checked scarf, curved blade. The one with the glowing blade. Then nobody goes near that one.", "title_page": false}, {"n": 8, "src": "pages/c3/08.webp", "thumb": "pages/c3/08_t.webp", "alt": "Aurora. He's listening to the dead again. It's louder today. The dead? Everyone who died on Harbour Night is still down there. But there's something under them. Something under the harbour is waking up.", "title_page": false}, {"n": 9, "src": "pages/c3/09.webp", "thumb": "pages/c3/09_t.webp", "alt": "Don't. It's loud enough in my head already. Sicario. Leave him alone. Unknown: Wardens pull back to Gate Three at 18:30. Unknown: Gate closes 19:40. Team positions attached. Unknown: Team Four will be closest to the old dock. Who keeps sending us these?", "title_page": false}, {"n": 10, "src": "pages/c3/10.webp", "thumb": "pages/c3/10_t.webp", "alt": "Someone inside the Corps who wants the same thing we do. That's not comforting. Dusk. Zaytoona's bats go first. Tacos, you take the cranes. Sicario, the gate. Aurora, you find what's waking up. I don't have to find it. I can hear it.", "title_page": false}, {"n": 11, "src": "pages/c3/11.webp", "thumb": "pages/c3/11_t.webp", "alt": "And me? He wants to see you first.", "title_page": false}, {"n": 12, "src": "pages/c3/12.webp", "thumb": "pages/c3/12_t.webp", "alt": "The man with no face. Vesper's leader. They're all inside the fence.", "title_page": false}, {"n": 13, "src": "pages/c3/13.webp", "thumb": "pages/c3/13_t.webp", "alt": "The girl with the vines? She's ranked thirty-sixth. She can barely grow a hedge. She's grown.", "title_page": false}, {"n": 14, "src": "pages/c3/14.webp", "thumb": "pages/c3/14_t.webp", "alt": "The Constant with the arm? He's nobody. I've never seen him look at anyone that long.", "title_page": false}, {"n": 15, "src": "pages/c3/15.webp", "thumb": "pages/c3/15_t.webp", "alt": "Afternoon. Do you think about them? If tonight goes wrong. Every day. That's why it can't go wrong. Fewer of us are born every year. The Shift is fading. Twenty more years and there won't be any more of us. They know that. They're just waiting us out.", "title_page": false}, {"n": 16, "src": "pages/c3/16.webp", "thumb": "pages/c3/16_t.webp", "alt": "And he can stop it? He's the only one who's tried. Orders. The girl with the vines comes back alive. Nobody touches her. And the rest of Team Four? He didn't say.", "title_page": false}, {"n": 17, "src": "pages/c3/17.webp", "thumb": "pages/c3/17_t.webp", "alt": "Stay down here tonight. I always do.", "title_page": false}, {"n": 18, "src": "pages/c3/18.webp", "thumb": "pages/c3/18_t.webp", "alt": "Dusk. Vesper night. Everybody inside. It knows we're coming.", "title_page": false}, {"n": 19, "src": "pages/c3/19.webp", "thumb": "pages/c3/19_t.webp", "alt": "Inside the fence. …and that's why Mattyes hates me. Mattyes hates everyone. …Hang on.", "title_page": false}, {"n": 20, "src": "pages/c3/20.webp", "thumb": "pages/c3/20_t.webp", "alt": "There are heartbeats out there. A lot of them. Other teams? No. They're coming toward us. A Vesper night.", "title_page": false}], "spreads": [], "cover": "pages/c3/01.webp", "thumb": "pages/c3/01_t.webp"}], "cover": "pages/c1/09.webp"};
 (function () {
   const $ = (id) => document.getElementById(id);
-  const N = BOOK.pages.length;
-  const END = N + 1;                       // a virtual "end of chapter" view
+  const CHAPTERS = BOOK.chapters;
   const store = {
     get(k) { try { return localStorage.getItem("secretlair-" + k); } catch (e) { return null; } },
     set(k, v) { try { localStorage.setItem("secretlair-" + k, v); } catch (e) {} }
   };
-  const spreadFor = (n) => BOOK.spreads.find((s) => s.pages.includes(n));
+  // Chapter 1 keeps the keys and links it had before there were chapters.
+  const pageKey = (c) => c === 1 ? "page" : "page-c" + c;
+  const hashFor = (c, p) => c === 1 ? "#p" + p : "#c" + c + "p" + p;
+  const chapter = (n) => CHAPTERS.find((c) => c.n === n) || CHAPTERS[0];
   const wideScreen = () => innerWidth >= 1000 && innerWidth / innerHeight > 1.15;
 
+  let CH = CHAPTERS[0], N = CH.pages.length, END = N + 1;   // END: a virtual "end of chapter" view
   let page = 1;
   let mode = store.get("mode") || (innerWidth < 700 ? "scroll" : wideScreen() ? "double" : "single");
+  const spreadFor = (n) => CH.spreads.find((s) => s.pages.includes(n));
+
+  function setChapter(n) {
+    if (CH.n === n && $("scroll").childElementCount) return;
+    CH = chapter(n); N = CH.pages.length; END = N + 1;
+    $("barChapter").textContent = CH.name;
+    $("slider").max = N;
+    $("scroll").innerHTML = "";
+    store.set("chapter", String(CH.n));
+  }
 
   // Which pages are shown together for a given page, in the current mode.
   function viewFor(n) {
@@ -200,8 +229,8 @@ const BOOK = {"title": "Secret Lair", "volume": "Volume 1: Field of Thorns", "ch
 
   function img(p, eager) {
     const im = new Image();
-    im.src = BOOK.pages[p - 1].src;
-    im.alt = "Page " + p + (BOOK.pages[p - 1].alt ? ": " + BOOK.pages[p - 1].alt : "");
+    im.src = CH.pages[p - 1].src;
+    im.alt = "Page " + p + (CH.pages[p - 1].alt ? ": " + CH.pages[p - 1].alt : "");
     im.decoding = "async";
     if (!eager) im.loading = "lazy";
     im.width = 1600; im.height = 2400;
@@ -211,12 +240,25 @@ const BOOK = {"title": "Secret Lair", "volume": "Volume 1: Field of Thorns", "ch
   function endCard() {
     const d = document.createElement("div");
     d.className = "endcard";
-    d.innerHTML = "<h2>End of Chapter 1</h2><p>Secret Lair · Volume 1: Field of Thorns</p>";
+    const nxt = CHAPTERS[CHAPTERS.indexOf(CH) + 1];
+    d.innerHTML = "<h2>End of Chapter " + CH.n + "</h2><p>Secret Lair · " + BOOK.volume + "</p>";
+    if (nxt) {
+      const n = document.createElement("button");
+      n.className = "btn"; n.textContent = "Next: " + nxt.name;
+      n.onclick = () => open(nxt.n, 1);
+      d.appendChild(n);
+    }
     const b = document.createElement("button");
-    b.className = "btn"; b.textContent = "Read again from the start";
+    b.className = nxt ? "btn ghost" : "btn"; b.textContent = "Read again from the start";
     b.onclick = () => go(1);
     d.appendChild(b);
     return d;
+  }
+
+  function remember(p) {
+    history.replaceState(null, "", hashFor(CH.n, p));
+    store.set(pageKey(CH.n), String(p));
+    store.set("chapter", String(CH.n));
   }
 
   function render() {
@@ -240,10 +282,9 @@ const BOOK = {"title": "Secret Lair", "volume": "Volume 1: Field of Thorns", "ch
     $("slider").value = Math.min(a, N);
     $("prevBtn").disabled = a <= 1;
     $("nextBtn").disabled = v.end;
-    history.replaceState(null, "", "#p" + Math.min(a, N));
-    store.set("page", String(Math.min(a, N)));
+    remember(Math.min(a, N));
     // warm the cache for the next and previous views
-    [last(v) + 1, last(v) + 2, a - 1].forEach((p) => { if (p >= 1 && p <= N) new Image().src = BOOK.pages[p - 1].src; });
+    [last(v) + 1, last(v) + 2, a - 1].forEach((p) => { if (p >= 1 && p <= N) new Image().src = CH.pages[p - 1].src; });
   }
 
   function go(n) {
@@ -259,7 +300,7 @@ const BOOK = {"title": "Secret Lair", "volume": "Volume 1: Field of Thorns", "ch
   function buildScroll() {
     const s = $("scroll");
     if (s.childElementCount) return;
-    BOOK.pages.forEach((p) => {
+    CH.pages.forEach((p) => {
       const sp = spreadFor(p.n);
       if (sp && p.n !== sp.pages[0]) return;           // second half is already in the spread image
       let im;
@@ -277,8 +318,7 @@ const BOOK = {"title": "Secret Lair", "volume": "Volume 1: Field of Thorns", "ch
           const sp = spreadFor(page);
           $("counter").textContent = (sp ? sp.pages.join("–") : page) + " / " + N;
           $("slider").value = page;
-          history.replaceState(null, "", "#p" + page);
-          store.set("page", String(page));
+          remember(page);
         }
       });
     }, { root: s, threshold: 0.35 });
@@ -298,10 +338,12 @@ const BOOK = {"title": "Secret Lair", "volume": "Volume 1: Field of Thorns", "ch
     else { page = Math.min(page, N); render(); }
   }
 
-  function open(n) {
+  function open(c, n) {
+    setChapter(c);
     $("landing").classList.add("hidden");
     $("reader").classList.remove("hidden");
-    page = n;
+    $("scroll").scrollTop = 0;
+    page = Math.max(1, Math.min(N, n));
     setMode(mode);
     const h = $("hint");
     if (mode !== "scroll" && !store.get("hinted")) {
@@ -315,32 +357,67 @@ const BOOK = {"title": "Secret Lair", "volume": "Volume 1: Field of Thorns", "ch
     showResume();
   }
 
-  function openGrid() {
-    const t = $("thumbs");
-    if (!t.childElementCount) {
-      BOOK.pages.forEach((p) => {
-        const b = document.createElement("button");
-        b.dataset.p = p.n;
-        b.innerHTML = '<img loading="lazy" alt="" src="' + p.thumb + '">' + p.n;
-        b.onclick = () => { closeGrid(); go(p.n); };
-        t.appendChild(b);
-      });
-    }
-    t.querySelectorAll("button").forEach((b) => b.classList.toggle("current", +b.dataset.p === Math.min(page, N)));
-    $("grid").classList.remove("hidden");
+  // The thumbnail grid doubles as the chapter menu: one tab per chapter.
+  let gridCh = 1;
+  function fillGrid(c) {
+    gridCh = c;
+    const ch = chapter(c), t = $("thumbs");
+    t.innerHTML = "";
+    ch.pages.forEach((p) => {
+      const b = document.createElement("button");
+      b.dataset.p = p.n;
+      b.innerHTML = '<img loading="lazy" alt="" src="' + p.thumb + '">' + p.n;
+      b.classList.toggle("current", ch === CH && p.n === Math.min(page, N));
+      b.onclick = () => { closeGrid(); if (ch === CH) go(p.n); else open(ch.n, p.n); };
+      t.appendChild(b);
+    });
+    $("tabs").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", +b.dataset.c === c));
+    $("gridTitle").textContent = CHAPTERS.length > 1 ? "Chapters" : "All pages";
   }
+  function openGrid() { fillGrid(CH.n); $("grid").classList.remove("hidden"); }
   const closeGrid = () => $("grid").classList.add("hidden");
 
-  // ---- wiring ----
+  // ---- landing ----
   $("coverImg").src = BOOK.cover;
-  $("slider").max = N;
-  $("startBtn").onclick = () => open(1);
   function showResume() {
-    const saved = +store.get("page");
+    const c = chapter(+store.get("chapter") || 1);
+    const saved = +store.get(pageKey(c.n));
     const r = $("resumeBtn");
-    if (saved > 1 && saved <= N) { r.textContent = "Continue from page " + saved; r.onclick = () => open(saved); r.classList.remove("hidden"); }
+    if ((saved > 1 || c.n > 1) && saved <= c.pages.length) {
+      r.textContent = "Continue " + (CHAPTERS.length > 1 ? "Chapter " + c.n + ", " : "from ") + "page " + Math.max(saved, 1);
+      r.onclick = () => open(c.n, Math.max(saved, 1)); r.classList.remove("hidden");
+    }
+    if (CHAPTERS.length > 1) {
+      const list = $("chapList");
+      list.innerHTML = "";
+      CHAPTERS.forEach((ch) => {
+        const li = document.createElement("li"), b = document.createElement("button");
+        const at = +store.get(pageKey(ch.n));
+        b.innerHTML = '<img alt="" src="' + ch.thumb + '"><span><b></b><small></small></span>';
+        b.querySelector("b").textContent = ch.name;
+        b.querySelector("small").textContent = ch.pages.length + " pages" + (at > 1 ? " · read to page " + at : "");
+        b.onclick = () => open(ch.n, 1);
+        li.appendChild(b); list.appendChild(li);
+      });
+      list.classList.remove("hidden");
+    }
   }
+  if (CHAPTERS.length === 1) $("chName").textContent = CHAPTERS[0].name;
+  else $("chName").classList.add("hidden");
   showResume();
+
+  if (CHAPTERS.length > 1) {
+    CHAPTERS.forEach((ch) => {
+      const b = document.createElement("button");
+      b.dataset.c = ch.n; b.textContent = ch.name;
+      b.onclick = () => fillGrid(ch.n);
+      $("tabs").appendChild(b);
+    });
+    $("tabs").classList.remove("hidden");
+  }
+
+  // ---- wiring ----
+  $("startBtn").onclick = () => open(1, 1);
   $("homeBtn").onclick = home;
   $("prevBtn").onclick = prev;
   $("nextBtn").onclick = next;
@@ -348,6 +425,7 @@ const BOOK = {"title": "Secret Lair", "volume": "Volume 1: Field of Thorns", "ch
   $("hitR").onclick = next;
   $("slider").oninput = (e) => go(+e.target.value);
   $("gridBtn").onclick = openGrid;
+  $("barTitle").onclick = openGrid;
   $("gridClose").onclick = closeGrid;
   document.querySelectorAll(".modes button").forEach((b) => (b.onclick = () => setMode(b.dataset.mode)));
   $("fsBtn").onclick = () => {
@@ -358,7 +436,7 @@ const BOOK = {"title": "Secret Lair", "volume": "Volume 1: Field of Thorns", "ch
   $("stage").addEventListener("dblclick", () => $("reader").classList.toggle("immersive"));
 
   document.addEventListener("keydown", (e) => {
-    if ($("reader").classList.contains("hidden")) { if (e.key === "Enter") open(1); return; }
+    if ($("reader").classList.contains("hidden")) { if (e.key === "Enter" && e.target.tagName !== "BUTTON") open(1, 1); return; }
     if (!$("grid").classList.contains("hidden")) { if (e.key === "Escape") closeGrid(); return; }
     if (e.target.tagName === "INPUT") return;
     const k = e.key.toLowerCase();
@@ -386,8 +464,9 @@ const BOOK = {"title": "Secret Lair", "volume": "Volume 1: Field of Thorns", "ch
 
   addEventListener("resize", () => { if (mode !== "scroll" && !$("reader").classList.contains("hidden")) render(); });
 
-  const m = location.hash.match(/^#p(\d+)$/);
-  if (m) open(Math.max(1, Math.min(N, +m[1])));
+  // #p5 is Chapter 1 page 5 (the links shared before chapters); #c2p5 is Chapter 2 page 5.
+  const m = location.hash.match(/^#(?:c(\d+))?p(\d+)$/);
+  if (m) open(m[1] ? +m[1] : 1, +m[2]);
 })();
 </script>
 </body>
